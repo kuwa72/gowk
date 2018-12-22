@@ -18,6 +18,7 @@ Usage of %s:
 func main() {
 	key := true
 	keys := ""
+	withLoop := false
 	var ims []string
 	var begin = ""
 	var end = ""
@@ -26,6 +27,7 @@ func main() {
 		if i == 0 {
 			continue // skip process name
 		}
+	AfterOneShot:
 		if key {
 			if '-' != a[0] {
 				log.Fatalf("is not key: %d, %s", i, a)
@@ -42,6 +44,10 @@ func main() {
 				end = a
 			case "-r":
 				body = a
+			case "-n":
+				withLoop = true
+				key = !key
+				goto AfterOneShot
 			default:
 				log.Fatalf("unknown key: %d, %s", i, a)
 				usage()
@@ -50,7 +56,7 @@ func main() {
 		key = !key
 	}
 
-	err := lib.Run(begin, body, end, ims...)
+	err := lib.Run(begin, body, end, withLoop, ims...)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -29,8 +29,10 @@ func TestCreateFileToTempDir(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	err := Run("", "", "")
-	if err != nil {
+	if err := Run("", "", "", false); err != nil {
+		t.Error(err)
+	}
+	if err := Run("", "", "", true); err != nil {
 		t.Error(err)
 	}
 }

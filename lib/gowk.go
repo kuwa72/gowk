@@ -47,6 +47,14 @@ func main() {
 	// begin
 	%s
 
+	// main
+	%s
+
+	//end
+	%s
+}`
+
+var loopCode string = `
 	// main loop
 	// file or stdin
 	r:=os.Stdin
@@ -54,23 +62,25 @@ func main() {
 	//scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
 		s := []string{scanner.Text()} // 0: line of input
-		s = append(s, strings.Split(s[0], " ")...) //
+		s = append(s, strings.Fields(s[0])...) //
 
-		// main
+		// inner main
 		%s
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
-
-	//end
-	%s
-}`
+`
 
 //Run code with imports and before/mid/after codes.
-func Run(before, mid, after string, imps ...string) error {
+func Run(before, mid, after string, withLoop bool, imps ...string) error {
 	is := buildImports(imps...)
-	code := fmt.Sprintf(baseCode, is, before, mid, after)
+	var code string
+	if withLoop {
+		code = fmt.Sprintf(baseCode, is, before, fmt.Sprintf(loopCode, mid), after)
+	} else {
+		code = fmt.Sprintf(baseCode, is, before, mid, after)
+	}
 	//fmt.Println(code)
 	fixedCode, err := fixImports(code)
 	//fmt.Println(fixedCode)
