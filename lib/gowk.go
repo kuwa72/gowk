@@ -1,10 +1,14 @@
 package lib
 
 import (
-	"go/printer"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
+
+	"golang.org/x/tools/imports"
 )
 
 type Session struct {
@@ -26,19 +30,17 @@ type Session struct {
 	RSTART   int               // matchで適合した文字列の開始位置
 
 	FilePath string
-	Fset     []string
 	File     string
 }
 
-var (
-	baseCode string = `
-package main
+var baseCode string = `package main
 
 import (
 	"bufio"
 	"fmt"
 	"os"
 	"strings"
+	%s
 )
 
 func main() {
@@ -49,11 +51,10 @@ func main() {
 	// file or stdin
 	r:=os.Stdin
 	scanner := bufio.NewScanner(r)
-	var s = []string{}
 	//scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		s = append(s, scanner.Text()) // 0: line of input
-		s = append(s, strings.Split(s[0], " ") //
+		s := []string{scanner.Text()} // 0: line of input
+		s = append(s, strings.Split(s[0], " ")...) //
 
 		// main
 		%s
@@ -64,30 +65,64 @@ func main() {
 
 	//end
 	%s
-}
-`
-)
+}`
 
-func (s *Session) Run() error {
-	f, err := os.Create(s.FilePath)
+//Run code with imports and before/mid/after codes.
+func Run(before, mid, after string, imps ...string) error {
+	is := buildImports(imps...)
+	code := fmt.Sprintf(baseCode, is, before, mid, after)
+	//fmt.Println(code)
+	fixedCode, err := fixImports(code)
+	//fmt.Println(fixedCode)
 	if err != nil {
 		return err
 	}
-
-	err = printer.Fprint(f, s.Fset, s.File)
+	fn, err := createFileToTempDir(fixedCode)
+	//fmt.Println(fn)
 	if err != nil {
+		log.Println(fixedCode)
 		return err
 	}
-
-	return goRun(append(s.ExtraFilePaths, s.FilePath))
+	return goRun(fn)
 }
 
-func goRun(files []string) error {
-	args := append([]string{"run"}, files...)
-	debugf("go %s", strings.Join(args, " "))
+func buildImports(is ...string) string {
+	var ret string
+	for _, i := range is {
+		ret = ret + fmt.Sprintf("\"%s\" ", i)
+	}
+	return ret
+}
+
+// fixImports formats and adjusts imports.
+func fixImports(code string) (string, error) {
+	fixed, err := imports.Process("", []byte(code), nil)
+	return string(fixed), err
+}
+
+func goRun(fn string) error {
+	args := append([]string{"run"}, fn)
 	cmd := exec.Command("go", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+// createFileToTempDir is create temporary directory.
+// You must remove directory after usign.
+// ex: defer os.RemoveAll(dir)
+// return directory name and error.
+func createFileToTempDir(code string) (string, error) {
+	dir, err := ioutil.TempDir("", "gowk")
+	if err != nil {
+		return "", err
+	}
+
+	tmpfn := filepath.Join(dir, "main.go")
+	if err := ioutil.WriteFile(tmpfn, []byte(code), 0666); err != nil {
+		return dir, err
+	}
+
+	return tmpfn, nil
 }

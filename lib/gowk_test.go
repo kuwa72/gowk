@@ -1,39 +1,36 @@
 package lib
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
-func TestRun(t *testing.T) {
-	code := `//
-package main
+func TestBuildImports(t *testing.T) {
+	if "" != buildImports() {
+		t.Error("empty arg for not empty")
+	}
 
-import "fmt"
+	if "\"a\" " != buildImports("a") {
+		t.Error("a a is not a")
+	}
 
-func main() {
-fmt.Println("Hello")
+	if "\"a\" \"b\" " != buildImports("a", "b") {
+		t.Error("a b is not a b")
+	}
 }
-`
-	content := []byte(code)
-	tmpfile, err := ioutil.TempFile("", "test")
+
+func TestCreateFileToTempDir(t *testing.T) {
+	fn, err := createFileToTempDir("foo")
 	if err != nil {
 		t.Error(err)
 	}
-
-	defer os.Remove(tmpfile.Name()) // clean up
-
-	if _, err := tmpfile.Write(content); err != nil {
-		t.Error(err)
+	if "" == fn {
+		t.Error("Can not create tempporary directory")
 	}
-	if err := tmpfile.Close(); err != nil {
-		t.Error(err)
-	}
+}
 
-	err := goRun([]string{tmpfile.Name()})
+func TestRun(t *testing.T) {
+	err := Run("", "", "")
 	if err != nil {
 		t.Error(err)
-		return
 	}
 }
