@@ -43,6 +43,9 @@ import (
 	%s
 )
 
+// define type, const, global var, method here
+%s
+
 func main() {
 	// begin
 	%s
@@ -73,40 +76,54 @@ var loopCode string = `
 `
 
 //Run code with imports and before/mid/after codes.
-func Run(before, mid, after string, withLoop bool, imps ...string) error {
+func Run(define, before, mid, after string, withLoop bool, printCode bool, imps ...string) error {
 	is := buildImports(imps...)
 	var code string
 	if withLoop {
-		code = fmt.Sprintf(baseCode, is, before, fmt.Sprintf(loopCode, mid), after)
+		code = fmt.Sprintf(baseCode, is, define, before, fmt.Sprintf(loopCode, mid), after)
 	} else {
-		code = fmt.Sprintf(baseCode, is, before, mid, after)
+		code = fmt.Sprintf(baseCode, is, define, before, mid, after)
 	}
 	//fmt.Println(code)
 	fixedCode, err := fixImports(code)
 	//fmt.Println(fixedCode)
 	if err != nil {
-		return err
+		log.Println(err)
+		log.Println(code)
+		fixedCode = code
+		// Ignore error, cause imports return lazy errors
+		// compiler return more error detail.
+		// return err
+	}
+	if printCode {
+		// verbose printing
+		log.Println(fixedCode)
 	}
 	fn, err := createFileToTempDir(fixedCode)
 	//fmt.Println(fn)
 	if err != nil {
+		log.Println("Failed to create temporary file")
+		return err
+	}
+	if err != goRun(fn) {
 		log.Println(fixedCode)
 		return err
 	}
-	return goRun(fn)
+	return nil
 }
 
 func buildImports(is ...string) string {
 	var ret string
 	for _, i := range is {
-		ret = ret + fmt.Sprintf("\"%s\" ", i)
+		ret = ret + fmt.Sprintf("\"%s\";", i)
 	}
 	return ret
 }
 
 // fixImports formats and adjusts imports.
 func fixImports(code string) (string, error) {
-	fixed, err := imports.Process("", []byte(code), nil)
+	imports.Debug = true
+	fixed, err := imports.Process("", []byte(code), &imports.Options{AllErrors: true})
 	return string(fixed), err
 }
 

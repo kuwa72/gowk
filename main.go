@@ -11,7 +11,7 @@ import (
 func usage() {
 	fmt.Fprintf(os.Stderr, `
 Usage of %s:
-   %s [-i package] [-i package] [-b begin-code] [-e end-code] -r codes\n`, os.Args[0], os.Args[0])
+   %s [-v] [-n] [-i package] [-i ...] [-d definition-code] [-b begin-code] [-e end-code] -r codes\n`, os.Args[0], os.Args[0])
 	os.Exit(1)
 }
 
@@ -19,7 +19,9 @@ func main() {
 	key := true
 	keys := ""
 	withLoop := false
+	printCode := false
 	var ims []string
+	var define = ""
 	var begin = ""
 	var end = ""
 	var body = ""
@@ -36,8 +38,12 @@ func main() {
 			keys = a
 		} else {
 			switch keys {
+			case "-h":
+				usage() //with death
 			case "-i":
 				ims = append(ims, a)
+			case "-d":
+				define = a
 			case "-b":
 				begin = a
 			case "-e":
@@ -48,6 +54,10 @@ func main() {
 				withLoop = true
 				key = !key
 				goto AfterOneShot
+			case "-v":
+				printCode = true
+				key = !key
+				goto AfterOneShot
 			default:
 				log.Fatalf("unknown key: %d, %s", i, a)
 				usage()
@@ -56,7 +66,7 @@ func main() {
 		key = !key
 	}
 
-	err := lib.Run(begin, body, end, withLoop, ims...)
+	err := lib.Run(define, begin, body, end, withLoop, printCode, ims...)
 	if err != nil {
 		log.Fatal(err)
 	}

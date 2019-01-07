@@ -9,11 +9,11 @@ func TestBuildImports(t *testing.T) {
 		t.Error("empty arg for not empty")
 	}
 
-	if "\"a\" " != buildImports("a") {
+	if "\"a\";" != buildImports("a") {
 		t.Error("a a is not a")
 	}
 
-	if "\"a\" \"b\" " != buildImports("a", "b") {
+	if "\"a\";\"b\";" != buildImports("a", "b") {
 		t.Error("a b is not a b")
 	}
 }
@@ -29,10 +29,10 @@ func TestCreateFileToTempDir(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	if err := Run("", "", "", false); err != nil {
+	if err := Run("", "", "", "", false, false); err != nil {
 		t.Error(err)
 	}
-	if err := Run("", "", "", true); err != nil {
+	if err := Run("", "", "", "", true, false); err != nil {
 		t.Error(err)
 	}
 }
