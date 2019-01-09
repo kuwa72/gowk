@@ -84,9 +84,8 @@ func Run(define, before, mid, after string, withLoop bool, printCode bool, imps 
 	} else {
 		code = fmt.Sprintf(baseCode, is, define, before, mid, after)
 	}
-	//fmt.Println(code)
+
 	fixedCode, err := fixImports(code)
-	//fmt.Println(fixedCode)
 	if err != nil {
 		log.Println(err)
 		log.Println(code)
@@ -99,12 +98,13 @@ func Run(define, before, mid, after string, withLoop bool, printCode bool, imps 
 		// verbose printing
 		log.Println(fixedCode)
 	}
+
 	fn, err := createFileToTempDir(fixedCode)
-	//fmt.Println(fn)
 	if err != nil {
 		log.Println("Failed to create temporary file")
 		return err
 	}
+
 	if err != goRun(fn) {
 		log.Println(fixedCode)
 		return err

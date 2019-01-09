@@ -11,7 +11,7 @@ import (
 func usage() {
 	fmt.Fprintf(os.Stderr, `
 Usage of %s:
-   %s [-v] [-n] [-i package] [-i ...] [-d definition-code] [-b begin-code] [-e end-code] -r codes\n`, os.Args[0], os.Args[0])
+   %s [-v] [-n] [-i package] [-i ...] [-d definition-code] [-b begin-code] [-e end-code] -r codes`, os.Args[0], os.Args[0])
 	os.Exit(1)
 }
 
@@ -25,6 +25,14 @@ func main() {
 	var begin = ""
 	var end = ""
 	var body = ""
+	for i, a := range os.Args {
+		if i == 0 {
+			continue // skip process name
+		}
+		if a == "-h" {
+			usage()
+		}
+	}
 	for i, a := range os.Args {
 		if i == 0 {
 			continue // skip process name
