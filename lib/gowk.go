@@ -105,6 +105,8 @@ func Run(define, before, mid, after string, withLoop bool, printCode bool, imps 
 		return err
 	}
 
+	defer os.RemoveAll(filepath.Dir(fn))
+
 	if err != goRun(fn) {
 		log.Println(fixedCode)
 		return err
@@ -122,7 +124,8 @@ func buildImports(is ...string) string {
 
 // fixImports formats and adjusts imports.
 func fixImports(code string) (string, error) {
-	imports.Debug = true
+	// Debug flag out some information(ex: working directory)
+	//imports.Debug = true
 	fixed, err := imports.Process("", []byte(code), &imports.Options{AllErrors: true})
 	return string(fixed), err
 }
