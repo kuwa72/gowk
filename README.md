@@ -8,6 +8,25 @@ The gowk is utility of run golang program in command line, without editor/comman
 
 `go get github.com/kuwa72/gowk`
 
+## usage
+
+```
+Usage of gowk:
+   gowk [-v] [-n] [-i package] [-i ...] [-d definition-code] [-b begin-code] [-e end-code] -r codes⏎ 
+```
+
+### options
+
+* -h: Show usage.
+* -n: Read line and process in main code. Datas expand to variable 's'. s[0] contains full line data. s[1], s[2]... contains word unit data.
+* -v: verbose mode. show full source code.
+* -i pkg: import package.
+* -d script: definition code.
+* -r script: main code.
+* -b script: codes execute before main.
+* -e script: codes execute after main.
+
+
 ## examples
 
 ### Hello world.
